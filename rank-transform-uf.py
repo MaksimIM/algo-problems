@@ -70,8 +70,8 @@ class Ranker:
         self.values = self.create_values()
         self.edges = self.create_edges()
 
-    '''Produce a sorted list of values that appear in the matrix.'''
     def create_values(self):
+        """Produce a sorted list of values that appear in the matrix."""
         values = set()
         for i in range(self.depth):
             for j in range(self.width):
@@ -86,21 +86,23 @@ class Ranker:
                 eds[val].append((i, j))
         return eds
 
-    '''Given a value, return the set of all indexes that have cells of that value'''
     def indexes(self, val):
+        """Given a value, return the set of all indexes that have cells of that value"""
         ans = set()
         for i, j in self.edges[val]:
             ans.add(i)
             ans.add(j+self.depth)
         return ans
 
-    '''Yield groups of indexes that are connected i.e.
-    whose cells with value val need to be assigned ranks simultaneously.
-    This is a vanilla bfs component finder, using  
-    'indexes' for initializing the graph and 
-    'neighbours' for finding vertex neighbours.
-    '''
-    def generate_index_components(self, val):  # uf
+    def generate_index_components(self, val):
+        """Yield connected components of indexes.
+
+        Find groups of indexes that are connected i.e.
+        whose cells with value val need to be assigned ranks simultaneously.
+        This is a vanilla bfs component finder, using
+        'indexes' for initializing the graph and
+        'neighbours' for finding vertex neighbours.
+        """
         # create graph
         graph = ComponentCollection(self.indexes(val))
         # add edges

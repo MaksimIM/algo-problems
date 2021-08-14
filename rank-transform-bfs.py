@@ -70,8 +70,8 @@ class Ranker:
         self.values = self.create_values()
         self.edges = self.create_edges()
 
-    '''Produce a sorted list of values that appear in the matrix.'''
     def create_values(self):
+        """Produce a sorted list of values that appear in the matrix."""
         values = set()
         for i in range(self.depth):
             for j in range(self.width):
@@ -86,29 +86,32 @@ class Ranker:
                 eds[val].append((i, j))
         return eds
 
-    '''Given a value, return the set of all indexes that have cells of that value'''
     def indexes(self, val):
+        """Given a value, return the set of all indexes that have cells of that value"""
         ans = set()
         for i, j in self.edges[val]:
             ans.add(i)
             ans.add(j+self.depth)
         return ans
 
-    '''For a given value, construct the dictionary of index-neighbours'''
     def neighbours(self, val):
+        """For a given value, construct the dictionary of index-neighbours"""
         ans = defaultdict(set)
         for i, j in self.edges[val]:
             ans[i].add(j+self.depth)
             ans[j+self.depth].add(i)
         return ans
 
-    '''Yield groups of indexes that are connected i.e.
-    whose cells with value val need to be assigned ranks simultaneously.
-    This is a vanilla bfs component finder, using  
-    'indexes' for initializing the graph and 
-    'neighbours' for finding vertex neighbours.
-    '''
-    def generate_index_components(self, val):  # bfs
+    def generate_index_components(self, val):
+        """Yield connected components of of indexes.
+
+        Find groups of indexes that are connected i.e.
+        whose cells with value val need to be assigned ranks simultaneously.
+        This is a vanilla bfs component finder, using
+        'indexes' for initializing the graph and
+        'neighbours' for finding vertex neighbours.
+        """
+        # bfs
         inds = self.indexes(val)
         nbs = self.neighbours(val)
         while inds:
@@ -127,9 +130,6 @@ class Ranker:
                         inds.remove(w)
             yield visited
 
-    '''Assign (the same) rank to all the cells in the component
-    Update self.ranks
-    '''
     def process_component(self, component, val):
         # compute the rank
         r = max(self.index_ranks[index] for index in component)+1
