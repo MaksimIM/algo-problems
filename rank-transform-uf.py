@@ -25,8 +25,10 @@ from typing import List
 
 class ComponentCollection:
     """The union-find data structure.
+
     Maintains a collection of connected components as an implicit set of trees.
-    Allows finding a representative (root) of a component and merging two components."""
+    Allows finding a representative (root) of a component and merging two components.
+    """
     def __init__(self, components):
         self.parent = {c: c for c in components}
         self.rank = {c: 0 for c in components}  # max depth to a leaf from c
