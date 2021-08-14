@@ -122,7 +122,7 @@ class Sudoku:
                 return True
         current_cell = self._unfilled[d].pop()
 
-        '''Prepare for the recursion.'''
+        # Prepare for the recursion.
         for neighbour in current_cell.neighbours:
             neighbour.neighbours.remove(current_cell)
 
@@ -132,14 +132,14 @@ class Sudoku:
             # to use the "least constraining" heuristic.
             modified_neighbours = self.fill_cell_nbrs(current_cell, tentative_value)
 
-            '''See if smaller sudoku is solved. If not, undo the changes.'''
+            # See if smaller sudoku is solved. If not, undo the changes.
             if self.solve():
                 self.board[current_cell.i][current_cell.j] = tentative_value
                 return True
             else:
                 self.unfill_cell_nbrs(tentative_value, modified_neighbours)
 
-        '''Undo the changes to the priority queue, to restore state for backtracking.'''
+        # Undo the changes to the priority queue, to restore state for backtracking.
         self._unfilled[d].add(current_cell)
         for neighbour in current_cell.neighbours:
             neighbour.neighbours.add(current_cell)
