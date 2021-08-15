@@ -72,6 +72,79 @@ from abc import ABC, abstractmethod
 from typing import List
 
 
+class EdgesToComponentsBase(ABC):
+    def __init__(self, edges):
+        self.edges = edges
+        self.vertices = self.get_vertices()
+
+    @abstractmethod
+    def component_list(self):  # list or generator???
+        pass
+
+    def get_vertices(self):
+        vertices = set()
+        for i, j in self.edges:
+            vertices.add(i)
+            vertices.add(j)
+        return vertices
+
+
+class EdgesToComponentsBFS(EdgesToComponentsBase):
+
+    def component_list(self):  # currently generator
+        """Yield connected components of of indexes.
+
+        Find groups of indexes that are connected i.e.
+        whose cells with value val need to be assigned ranks simultaneously.
+        This is a vanilla bfs component finder, using
+        'indexes' for initializing the graph and
+        'neighbours' for finding vertex neighbours.
+        """
+        # bfs
+        # Pop directly or make a copy?
+        v_to_nbrs = self.vertex_to_neighbours()
+        while self.vertices:
+            start = self.vertices.pop()
+            q = deque()
+            q.append(start)
+            visited = {start}
+
+            while q:
+                v = q.popleft()
+                visited.add(v)
+                for w in v_to_nbrs[v]:
+                    if w not in visited:
+                        q.append(w)
+                        visited.add(w)
+                        self.vertices.remove(w)
+            yield visited
+
+    def vertex_to_neighbours(self):
+        """For a given value, construct the dictionary of index-neighbours"""
+        v_to_nbrs = defaultdict(set)
+        for i, j in self.edges:
+            v_to_nbrs[i].add(j)
+            v_to_nbrs[j].add(i)
+        return v_to_nbrs
+
+
+class EdgesToComponentsUF(EdgesToComponentsBase):
+
+    def component_list(self):
+        """Yield connected components of indexes.
+
+        Find groups of indexes that are connected i.e.
+        whose cells with value val need to be assigned ranks simultaneously.
+        The union-find implementation.
+        """
+        # create graph
+        graph = ComponentCollection(self.get_vertices())
+        # add edges
+        for i, j in self.edges:
+            graph.union(i, j)
+        return graph.component_list()
+
+
 class ComponentCollection:
     """The union-find data structure.
 
@@ -104,16 +177,15 @@ class ComponentCollection:
             if rank1 == rank2:
                 self.node_to_rank[root2] = rank2+1
 
-    def generate_components(self):
+    def component_list(self):
         components = defaultdict(list)
         for node in self.node_to_parent:
             components[self.find_root(node)].append(node)
-        for component in components.values():
-            yield component
+        return components.values()
 
 
-class RankerBase(ABC):
-    def populate(self, matrix):
+class Ranker:
+    def __init__(self, matrix):
         self.matrix = matrix
         self.depth = len(self.matrix)
         self.width = len(self.matrix[0])
@@ -122,36 +194,30 @@ class RankerBase(ABC):
         self.values = self.create_values()
         self.edges = self.create_edges()
 
-    @abstractmethod
-    def generate_index_components(self, val):
-        pass
+    def component_list(self, val):  # currenly list
+        return EdgesToComponentsUF(self.edges[val]).component_list
+        # return EdgesToComponentsBFS(self.edges[val])
 
     def create_values(self):
         """Produce a sorted list of values that appear in the matrix."""
-        vals = set()
+        values = set()
         for i in range(self.depth):
             for j in range(self.width):
-                vals.add(self.matrix[i][j])
-        return sorted(list(vals))
+                values.add(self.matrix[i][j])
+        return sorted(list(values))
 
     def create_edges(self):
         eds = defaultdict(list)
         for i in range(self.depth):
             for j in range(self.width):
                 val = self.matrix[i][j]
-                eds[val].append((i, j))
+                eds[val].append((i, j+self.depth))
         return eds
-
-    def get_vertices(self, val):
-        verts = set()
-        for i, j in self.edges[val]:
-            verts.add(i)
-            verts.add(j+self.depth)
-        return verts
 
     def create_solution_ranks(self):
         for val in self.values:
-            for component in self.generate_index_components(val):
+            for component in self.component_list(val):
+            # ValuesView inherits from Iterable as of python 3.7.2.
                 self.update_ranks(component)
             self.assign_ranks(val)
 
@@ -167,69 +233,8 @@ class RankerBase(ABC):
             self.solution_ranks[i][j] = self.index_ranks[i]
 
 
-class RankerBFS(RankerBase):
-    def __init__(self, matrix):
-        self.populate(matrix)
-
-    def generate_index_components(self, val):
-        """Yield connected components of of indexes.
-
-        Find groups of indexes that are connected i.e.
-        whose cells with value val need to be assigned ranks simultaneously.
-        This is a vanilla bfs component finder, using
-        'indexes' for initializing the graph and
-        'neighbours' for finding vertex neighbours.
-        """
-        # bfs
-        verts = self.get_vertices(val)
-        v_to_nbrs = self.vertex_to_neighbours(val)
-        while verts:
-            start = verts.pop()
-            q = deque()
-            q.append(start)
-            visited = {start}
-
-            while q:
-                v = q.popleft()
-                visited.add(v)
-                for w in v_to_nbrs[v]:
-                    if w not in visited:
-                        q.append(w)
-                        visited.add(w)
-                        verts.remove(w)
-            yield visited
-
-    def vertex_to_neighbours(self, val):
-        """For a given value, construct the dictionary of index-neighbours"""
-        v_to_nbrs = defaultdict(set)
-        for i, j in self.edges[val]:
-            v_to_nbrs[i].add(j+self.depth)
-            v_to_nbrs[j+self.depth].add(i)
-        return v_to_nbrs
-
-
-class RankerUF(RankerBase):
-    def __init__(self, matrix):
-        self.populate(matrix)
-
-    def generate_index_components(self, val):
-        """Yield connected components of indexes.
-
-        Find groups of indexes that are connected i.e.
-        whose cells with value val need to be assigned ranks simultaneously.
-        The union-find implementation.
-        """
-        # create graph
-        graph = ComponentCollection(self.get_vertices(val))
-        # add edges
-        for i, j in self.edges[val]:
-            graph.union(i, j+self.depth)
-        return graph.generate_components()
-
-
 class Solution:
     def matrixRankTransform(self, matrix: List[List[int]]) -> List[List[int]]:
-        ranker = RankerBFS(matrix)
-        # ranker = RankerUF(matrix)
+        ranker = Ranker(matrix)
         ranker.create_solution_ranks()
         return ranker.solution_ranks
