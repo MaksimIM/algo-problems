@@ -1,4 +1,9 @@
-"""The basic idea is simple:
+"""This is a solution for the Rank Transform of a Matrix problem.
+
+This is problem 1632 on LeetCode
+https://leetcode.com/problems/rank-transform-of-a-matrix/
+
+The basic idea is simple:
 going from lowest values to highest,
 for a given value, find groups of cells with that value
 that must have the same rank.

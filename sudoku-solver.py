@@ -1,18 +1,44 @@
-""" We maintain the board as a priority queue of cells,
-    ordered by number of possible values that can be put into that cell
-    without violating the sudoku constraints.
-    (The abstract data type of queue is implemented as an array of sets of cells,
-    with index being the number of possible values.
-    This is an efficient implementation for our use case,
-    since our priorities only take values between 0 and 10.)
-    We then try to fill in one of the most constrained cells,
-    update the priority queue, and recurse.
+""" This is a Sudoku solver.
 
-    The above implements the "most constrained first" heuristic
-    for choosing which cell to fill.
-    I have also implemented the "least constraining value first"
-    for choosing which values to try.
-    However, it did not improve performance, an so is disabled in the code below.
+Solving Sudoku is problem 1632 on LeetCode
+https://leetcode.com/problems/sudoku-solver/
+
+The code below implements a backtracking algorithm with the "most constrained first"
+heuristic for choosing which cell to fill.
+
+Namely, we maintain the board as a priority queue of cells,
+ordered by number of possible values that can be put into that cell
+without violating the sudoku constraints.
+(The abstract data type of queue is implemented as an array of sets of cells,
+with index being the number of possible values.
+This is an efficient implementation for our use case,
+since our priorities only take values between 0 and 10.)
+We then try to fill in one of the most constrained cells,
+update the priority queue, and recurse.
+
+The number of operations required to fill a cell
+depends on the number of its unfilled neighbours.
+In the worst cases, this is O(N^2) (where N=3 for usual Sudoku).
+Hence the overall running time is O(N^2 x number of cell-fillings).
+In practice the code runs fairly quickly
+(36 to 51 ms on LeetCode, 99th to 95th percentile
+and under 2 seconds on the following challenging test case:
+[
+[".",".",".",".",".",".",".","1","."],
+[".",".",".",".",".","2",".",".","3"],
+[".",".",".","4",".",".",".",".","."],
+[".",".",".",".",".",".","5",".","."],
+["4",".","1","6",".",".",".",".","."],
+[".",".","7","1",".",".",".",".","."],
+[".","5",".",".",".",".","2",".","."],
+[".",".",".",".","8",".",".","4","."],
+[".","3",".","9","1",".",".",".","."]
+]
+).
+
+I have also implemented the "least constraining value first"
+for choosing which values to try.
+However, it did not improve performance, an so is disabled in the code below.
 """
 from typing import List
 
@@ -45,12 +71,12 @@ class Cell:
 
 def all_neighbors(i, j):
     """Returns indexes of all entries neighboring (i,j) in the sudoku board"""
-    answer = [(i, c) for c in range(N * N)] + [(r, j) for r in range(N * N)]
+    neighbours = [(i, c) for c in range(N * N)] + [(r, j) for r in range(N * N)]
     k_0, l_0 = N * (i // N), N * (j // N)
     for dk in range(N):
         for dl in range(N):
-            answer += [(k_0 + dk, l_0 + dl)]
-    return answer
+            neighbours += [(k_0 + dk, l_0 + dl)]
+    return neighbours
 
 
 def allowed_values(i, j, board_list):
@@ -71,7 +97,7 @@ class Sudoku:
 
     def build_que(self):
         table = self.table_of_cells()
-        '''Processes the table of cells into the queue of cells'''
+        # Processes the table of cells into a queue of cells.
         board_que = [set() for _ in range(N * N + 1)]
         for i in range(N * N):
             for j in range(N * N):
@@ -87,7 +113,7 @@ class Sudoku:
             for j in range(N * N):
                 if self.board[i][j] == '.':
                     table[i][j] = Cell(i, j, allowed_values(i, j, self.board))
-        'Set the neighbors of the cell objects.'
+        # Set the neighbors of the cell objects.
         for i in range(N * N):
             for j in range(N * N):
                 if table[i][j]:
@@ -95,9 +121,10 @@ class Sudoku:
                                               ((k, l) != (i, j) and table[k][l])}
         return table
 
-    def fill_cell_nbrs(self, current_cell, tentative_value):
+    def fill_cell_neighbours(self, current_cell, tentative_value):
         """Restrict possible values of neighbors.
-        Record which neighbors are affected for backtracking."""
+        Record which neighbors are affected for backtracking.
+        Return the set of affected neighbours."""
         modified_neighbours = set()
         for nbr in current_cell.neighbours:
             if tentative_value in nbr.possible_values:
@@ -107,7 +134,7 @@ class Sudoku:
                 self._unfilled[len(nbr.possible_values)].add(nbr)
         return modified_neighbours
 
-    def unfill_cell_nbrs(self, tentative_value, modified_neighbours):
+    def unfill_cell_neighbours(self, tentative_value, modified_neighbours):
         for neighbour in modified_neighbours:
             self._unfilled[len(neighbour.possible_values)].remove(neighbour)
             neighbour.possible_values.add(tentative_value)
@@ -132,16 +159,18 @@ class Sudoku:
         for tentative_value in current_cell.possible_values:
             # Alternatively, iterate over current_cell.ordered_possible_values()
             # to use the "least constraining" heuristic.
-            modified_neighbours = self.fill_cell_nbrs(current_cell, tentative_value)
+            modified_neighbours = self.fill_cell_neighbours(current_cell, tentative_value)
 
             # See if smaller sudoku is solved. If not, undo the changes.
             if self.solve():
                 self.board[current_cell.i][current_cell.j] = tentative_value
                 return True
             else:
-                self.unfill_cell_nbrs(tentative_value, modified_neighbours)
+                self.unfill_cell_neighbours(tentative_value, modified_neighbours)
 
-        # Undo the changes to the priority queue, to restore state for backtracking.
+        # All the values failed. This means we should've chosen a different value
+        # for one of the previous cells. We now undo the changes to the priority queue,
+        # to restore state for backtracking.
         self._unfilled[d].add(current_cell)
         for neighbour in current_cell.neighbours:
             neighbour.neighbours.add(current_cell)
