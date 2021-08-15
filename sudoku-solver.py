@@ -20,6 +20,9 @@ The number of operations required to fill a cell
 depends on the number of its unfilled neighbours.
 In the worst cases, this is O(N^2) (where N=3 for usual Sudoku).
 Hence the overall running time is O(N^2 x number of cell-fillings).
+(This is in contrast to O(N^3 x number of cell-fillings) for the queue-less
+version that computes a least-constrained cell "on the fly", or
+O(N^2 log N x number of cell-fillings) for a heap-based queue version).
 In practice the code runs fairly quickly
 (36 to 51 ms on LeetCode, 99th to 95th percentile
 and under 2 seconds on the following challenging test case:
