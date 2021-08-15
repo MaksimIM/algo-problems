@@ -14,6 +14,8 @@
     for choosing which values to try.
     However, it did not improve performance, an so is disabled in the code below.
 """
+from typing import List
+
 ALPHABET = ('1', '2', '3', '4', '5', '6', '7', '8', '9')
 N = 3
 
