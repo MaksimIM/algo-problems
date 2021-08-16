@@ -94,76 +94,79 @@ class Solution:
             }
 
         ranker = Ranker(matrix, *version_parameters[version])
-        ranker.create_solution_ranks()
-        return ranker.solution_ranks
+        return ranker.solution
 
 
 class Ranker:
     def __init__(self, matrix, component_maker_class, component_maker_kwargs=None):
-        self.matrix = matrix
-        self.depth = len(self.matrix)
-        self.width = len(self.matrix[0])
-        self.solution_ranks = [[0 for _ in range(self.width)] for _ in range(self.depth)]
-        self.index_ranks = [0 for _ in range(self.depth+self.width)]
-        self.values = self.create_values()
-        self.edges = self.create_edges()
-        self.components_maker_class = component_maker_class
+        self._matrix = matrix
+        self._depth = len(self._matrix)
+        self._width = len(self._matrix[0])
+        self._index_ranks = [0 for _ in range(self._depth+self._width)]
+        self._solution = None
+        self._values = self._create_values()
+        self._edges = self._create_edges()
+        self._components_maker_class = component_maker_class
         if component_maker_kwargs is None:
-            self.component_maker_kwargs = {}
+            self._component_maker_kwargs = {}
         else:
-            self.component_maker_kwargs = component_maker_kwargs
+            self._component_maker_kwargs = component_maker_kwargs
 
-    def create_values(self):
+    def _create_values(self):
         """Produce a sorted list of values that appear in the matrix."""
         values = set()
-        for i in range(self.depth):
-            for j in range(self.width):
-                values.add(self.matrix[i][j])
+        for i in range(self._depth):
+            for j in range(self._width):
+                values.add(self._matrix[i][j])
         return sorted(list(values))
 
-    def create_edges(self):
+    def _create_edges(self):
         eds = defaultdict(list)
-        for i in range(self.depth):
-            for j in range(self.width):
-                val = self.matrix[i][j]
-                eds[val].append((i, j+self.depth))
+        for i in range(self._depth):
+            for j in range(self._width):
+                val = self._matrix[i][j]
+                eds[val].append((i, j+self._depth))
         return eds
 
-    def create_solution_ranks(self):
-        for val in self.values:
-            for component in self.components(val):
-                self.update_ranks(component)
-            self.assign_ranks(val)
+    @property
+    def solution(self):
+        if not self._solution:
+            self._solution = [[0 for _ in range(self._width)] for _ in range(self._depth)]
+            for val in self._values:
+                for component in self.components(val):
+                    self._update_ranks(component)
+                self._assign_ranks(val)
+        return self._solution
 
     def components(self, val):
-        return self.components_maker_class(self.edges[val],
-                                           **self.component_maker_kwargs).components()
+        return self._components_maker_class(self._edges[val],
+                                            **self._component_maker_kwargs).components()
 
-    def update_ranks(self, component):
+    def _update_ranks(self, component):
         # compute the rank
-        r = max(self.index_ranks[index] for index in component)+1
+        r = max(self._index_ranks[index] for index in component)+1
         # update the rank
         for index in component:
-            self.index_ranks[index] = r
+            self._index_ranks[index] = r
 
-    def assign_ranks(self, val):
-        for i, j_shifted in self.edges[val]:
-            j = j_shifted-self.depth
-            self.solution_ranks[i][j] = self.index_ranks[i]
+    def _assign_ranks(self, val):
+        for i, j_shifted in self._edges[val]:
+            j = j_shifted-self._depth
+            self._solution[i][j] = self._index_ranks[i]
 
 
 class EdgesToComponentsBase(ABC):
     def __init__(self, edges):
-        self.edges = edges
-        self.vertices = self.get_vertices()
+        self._edges = edges
+        self._vertices = self._get_vertices()
 
     @abstractmethod
     def components(self) -> Iterable:
         pass
 
-    def get_vertices(self):
+    def _get_vertices(self):
         vertices = set()
-        for i, j in self.edges:
+        for i, j in self._edges:
             vertices.add(i)
             vertices.add(j)
         return vertices
@@ -178,7 +181,7 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
         v_to_nbrs = self.vertex_to_neighbours()
         # BFS
         # Copy the vertices or use them up? We copy, even if using up is a bit faster.
-        remaining_vertices = copy.copy(self.vertices)
+        remaining_vertices = copy.copy(self._vertices)
         while remaining_vertices:
             start = remaining_vertices.pop()
             q = deque([start])
@@ -196,7 +199,7 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
 
     def vertex_to_neighbours(self) -> DefaultDict[Hashable, Set]:
         v_to_nbrs = defaultdict(set)
-        for i, j in self.edges:
+        for i, j in self._edges:
             v_to_nbrs[i].add(j)
             v_to_nbrs[j].add(i)
         return v_to_nbrs
@@ -205,15 +208,15 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
 class EdgesToComponentsUF(EdgesToComponentsBase):
     def __init__(self, edges, strategy_class):
         super().__init__(edges)
-        self.strategy_class = strategy_class
+        self._strategy_class = strategy_class
 
     def components(self) -> Iterable:
         """A union-find-based component finder method."""
 
         # create graph
-        graph = self.strategy_class(self.get_vertices())
+        graph = self._strategy_class(self._get_vertices())
         # add edges
-        for i, j in self.edges:
+        for i, j in self._edges:
             graph.union(i, j)
         return graph.component_list()
 
@@ -225,7 +228,7 @@ class ComponentCollection(ABC):
     Allows finding a representative (root) of a component and merging two components.
     """
     def __init__(self, components):
-        self.node_to_parent = {c: c for c in components}
+        self._node_to_parent = {c: c for c in components}
 
     @abstractmethod
     def find_root(self, c):
@@ -237,7 +240,7 @@ class ComponentCollection(ABC):
 
     def component_list(self):
         components = defaultdict(list)
-        for node in self.node_to_parent:
+        for node in self._node_to_parent:
             components[self.find_root(node)].append(node)
         return components.values()
 
@@ -245,51 +248,51 @@ class ComponentCollection(ABC):
 class ComponentCollectionRankBased(ComponentCollection):
     def __init__(self, components):
         super().__init__(components)
-        self.node_to_rank = {c: 0 for c in components}  # max depth to a leaf from c
+        self._node_to_rank = {c: 0 for c in components}  # max depth to a leaf from c
 
     def find_root(self, c):
         # with path compression, that is
         # every root-finding call changes all parents in the path to be the root
-        if self.node_to_parent[c] == c:
+        if self._node_to_parent[c] == c:
             return c
         else:  # make parent be the (recursively found) root and return it
-            self.node_to_parent[c] = self.find_root(self.node_to_parent[c])
-        return self.node_to_parent[c]
+            self._node_to_parent[c] = self.find_root(self._node_to_parent[c])
+        return self._node_to_parent[c]
 
     def union(self, c1, c2):
         root1, root2 = self.find_root(c1), self.find_root(c2)
         if root1 != root2:
             # make shallower tree a subtree of a deeper one
-            rank1, rank2 = self.node_to_rank[root1], self.node_to_rank[root2]
+            rank1, rank2 = self._node_to_rank[root1], self._node_to_rank[root2]
             if rank1 > rank2:
                 root1, root2 = root2, root1
                 rank1, rank2 = rank2, rank1
-            self.node_to_parent[root1] = root2
+            self._node_to_parent[root1] = root2
             # if equally deep, the depth of the union is higher by 1
             if rank1 == rank2:
-                self.node_to_rank[root2] = rank2+1
+                self._node_to_rank[root2] = rank2+1
 
 
 class ComponentCollectionSizeBased(ComponentCollection):
     def __init__(self, components):
         super(ComponentCollectionSizeBased, self).__init__(components)
-        self.parent_to_nodes = {c: {c} for c in components}
+        self._parent_to_nodes = {c: {c} for c in components}
 
     def find_root(self, c):
-        return self.node_to_parent[c]
+        return self._node_to_parent[c]
 
     def union(self, c1, c2):
         root1, root2 = self.find_root(c1), self.find_root(c2)
         if root1 != root2:
-            size1, size2 = len(self.parent_to_nodes[root1]), len(self.parent_to_nodes[root2])
+            size1, size2 = len(self._parent_to_nodes[root1]), len(self._parent_to_nodes[root2])
             # make root1 smaller
             if size1 > size2:
                 root1, root2 = root2, root1
             # merge trees
-            self.node_to_parent[root1] = root2
+            self._node_to_parent[root1] = root2
             # repoint all children of root1
-            for child in self.parent_to_nodes[root1]:
-                self.node_to_parent[child] = root2
+            for child in self._parent_to_nodes[root1]:
+                self._node_to_parent[child] = root2
             # update children dict
-            self.parent_to_nodes[root2].update(self.parent_to_nodes[root1])
-            del self.parent_to_nodes[root1]
+            self._parent_to_nodes[root2].update(self._parent_to_nodes[root1])
+            del self._parent_to_nodes[root1]
