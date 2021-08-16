@@ -81,7 +81,7 @@ class Cell:
                 for nbr in self.neighbours].count(True)
 
 
-def all_neighbors(i, j):
+def _all_neighbors(i, j):
     """Returns indexes of all entries neighboring (i,j) in the sudoku board"""
     neighbours = [(i, c) for c in range(N * N)] + [(r, j) for r in range(N * N)]
     k_0, l_0 = N * (i // N), N * (j // N)
@@ -91,10 +91,10 @@ def all_neighbors(i, j):
     return neighbours
 
 
-def allowed_values(i, j, board_list):
+def _allowed_values(i, j, board_list):
     """Returns all values that the entry (i,j) may be given
     without violating the sudoku constraints."""
-    forbidden_values = {board_list[k][l] for k, l in all_neighbors(i, j)}
+    forbidden_values = {board_list[k][l] for k, l in _all_neighbors(i, j)}
     return {x for x in ALPHABET if x not in forbidden_values}
 
 
@@ -124,13 +124,13 @@ class Sudoku:
         for i in range(N * N):
             for j in range(N * N):
                 if self._board[i][j] == '.':
-                    table[i][j] = Cell(i, j, allowed_values(i, j, self._board))
+                    table[i][j] = Cell(i, j, _allowed_values(i, j, self._board))
         # Set the neighbors of the cell objects.
         for i in range(N * N):
             for j in range(N * N):
                 if table[i][j]:
                     table[i][j].neighbours = {table[k][l]
-                                              for (k, l) in all_neighbors(i, j)
+                                              for (k, l) in _all_neighbors(i, j)
                                               if ((k, l) != (i, j)
                                               and table[k][l])}
         return table

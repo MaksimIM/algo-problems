@@ -80,20 +80,20 @@ from abc import ABC, abstractmethod
 from typing import List, Iterable, DefaultDict, Hashable, Set
 
 # Choose 'BFS', 'UF_SIZE', 'UF_RANK'
-version = 'BFS'
+_VERSION = 'BFS'
 
 
 class Solution:
     def matrixRankTransform(self, matrix: List[List[int]]) -> List[List[int]]:
         version_parameters = {
-            'BFS': [EdgesToComponentsBFS],
-            'UF_SIZE': [EdgesToComponentsUF,
-                        {'strategy_class': ComponentCollectionSizeBased}],
-            'UF_RANK': [EdgesToComponentsUF,
-                        {'strategy_class': ComponentCollectionRankBased}],
-            }
+            'BFS': (EdgesToComponentsBFS,),
+            'UF_SIZE': (EdgesToComponentsUF,
+                        {'strategy_class': ComponentCollectionSizeBased}),
+            'UF_RANK': (EdgesToComponentsUF,
+                        {'strategy_class': ComponentCollectionRankBased}),
+        }
 
-        ranker = Ranker(matrix, *version_parameters[version])
+        ranker = Ranker(matrix, *version_parameters[_VERSION])
         return ranker.solution
 
 
@@ -288,7 +288,7 @@ class ComponentCollectionSizeBased(ComponentCollection):
     def union(self, c1, c2):
         root1, root2 = self.find_root(c1), self.find_root(c2)
         if root1 != root2:
-            size1, size2 = len(self._parent_to_nodes[root1]),\
+            size1, size2 = len(self._parent_to_nodes[root1]), \
                            len(self._parent_to_nodes[root2])
             # make root1 smaller
             if size1 > size2:
