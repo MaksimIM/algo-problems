@@ -39,14 +39,21 @@ than there are atoms in the universe).
 
 We provide both implementations, via EdgesToComponentsBFS and EdgesToComponentsUF classes,
 which both inherit from abstract EdgesToComponentsBase and provide their own implementations
-of the generate_components method. Their time performance is not too different,
+of the generate_components method. Furthermore, we implement both size-based and rank-based
+union strategies for the union-find version.
+
+
+Their time performance of all three versions are not too different,
 (the BFS version is a bit faster, landing consistently in 99th percentile on leetcode),
 though the union-find version uses less memory
-(because it does not need to maintain neighbor-dictionary versions of the graphs).
+(because it does not need to maintain neighbor-dictionary versions of the graphs),
+and for the size-based union startegy the time is quite close to that of the BFS version.
 
-Overall, the worst-case complexity of either implementation is O(C ln C),
+Overall, the worst-case complexity of each implementation is O(C ln C),
 due to the sorting of the values.
-After that step the rest runs in O(C)/O(C alpha(C)) time.
+After that step the rest runs in
+O(C) (BFS)/O(C alpha(C)) (rank-based UF)/O(C ln(C)) (size-based UF)
+time.
 
 Some final notes:
 
@@ -57,7 +64,8 @@ one more than the maximal rank already present.
 one needs at least one optimization in component finding,
 either merge-by-size or merge by rank, to ensure logarithmic time
 for find and union operations. To obtain the O(C alpha(C)) complexity
-union by rank and path compression are required. This is what we do.
+union by rank and path compression are required. In practice,
+path compression makes littledifference on the LeetCode examples.
 2) There are some alternative approaches to implementing the BFS version.
 For example, instead of the sets of edges, one could directly build two dictionaries,
 one mapping a value to all the indexes relevant to that value (aka the vertices
@@ -70,6 +78,72 @@ from collections import deque
 from collections import defaultdict
 from abc import ABC, abstractmethod
 from typing import List, Iterable
+
+
+class Solution:
+    def matrixRankTransform(self, matrix: List[List[int]]) -> List[List[int]]:
+        ranker = Ranker(matrix, component_maker_class=EdgesToComponentsBFS)
+        # ranker = Ranker(matrix, component_maker_class=EdgesToComponentsUF,
+        #               component_maker_kwargs={'strategy_class': ComponentCollectionRankBased})
+        # ranker = Ranker(matrix, component_maker_class=EdgesToComponentsUF,
+        #               component_maker_kwargs={'strategy_class': ComponentCollectionSizeBased})
+        ranker.create_solution_ranks()
+        return ranker.solution_ranks
+
+
+class Ranker:
+    def __init__(self, matrix, component_maker_class, component_maker_kwargs=None):
+        self.matrix = matrix
+        self.depth = len(self.matrix)
+        self.width = len(self.matrix[0])
+        self.solution_ranks = [[0 for _ in range(self.width)] for _ in range(self.depth)]
+        self.index_ranks = [0 for _ in range(self.depth+self.width)]
+        self.values = self.create_values()
+        self.edges = self.create_edges()
+        self.components_maker_class = component_maker_class
+        if component_maker_kwargs is None:
+            self.component_maker_kwargs = {}
+        else:
+            self.component_maker_kwargs = component_maker_kwargs
+
+    def components(self, val):
+        return self.components_maker_class(self.edges[val],
+                                           **self.component_maker_kwargs).components()
+
+    def create_values(self):
+        """Produce a sorted list of values that appear in the matrix."""
+        values = set()
+        for i in range(self.depth):
+            for j in range(self.width):
+                values.add(self.matrix[i][j])
+        return sorted(list(values))
+
+    def create_edges(self):
+        eds = defaultdict(list)
+        for i in range(self.depth):
+            for j in range(self.width):
+                val = self.matrix[i][j]
+                eds[val].append((i, j+self.depth))
+        return eds
+
+    def create_solution_ranks(self):
+        for val in self.values:
+            for component in self.components(val):
+                self.update_ranks(component)
+            self.assign_ranks(val)
+
+    def update_ranks(self, component):
+        # compute the rank
+        r = max(self.index_ranks[index] for index in component)+1
+        # update the rank
+        for index in component:
+            self.index_ranks[index] = r
+
+    def assign_ranks(self, val):
+        for i, j_shifted in self.edges[val]:
+            j = j_shifted-self.depth
+            self.solution_ranks[i][j] = self.index_ranks[i]
+
 
 
 class EdgesToComponentsBase(ABC):
@@ -124,6 +198,9 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
 
 
 class EdgesToComponentsUF(EdgesToComponentsBase):
+    def __init__(self, edges, strategy_class):
+        super(EdgesToComponentsUF, self).__init__(edges)
+        self.strategy_class = strategy_class
 
     def components(self):
         """Produces an iterable of connected components.
@@ -132,21 +209,41 @@ class EdgesToComponentsUF(EdgesToComponentsBase):
         """
 
         # create graph
-        graph = ComponentCollectionSizeBased(self.get_vertices())
+        graph = self.strategy_class(self.get_vertices())
+        # graph = ComponentCollectionRankBased(self.get_vertices())
         # add edges
         for i, j in self.edges:
             graph.union(i, j)
         return graph.component_list()
 
 
-class ComponentCollection:
+class ComponentCollection(ABC):
+    def __init__(self, components):
+        self.node_to_parent = {c: c for c in components}
+
+    @abstractmethod
+    def find_root(self, c):
+        pass
+
+    @abstractmethod
+    def union(self, c1, c2):
+        pass
+
+    def component_list(self):
+        components = defaultdict(list)
+        for node in self.node_to_parent:
+            components[self.find_root(node)].append(node)
+        return components.values()
+
+
+class ComponentCollectionRankBased(ComponentCollection):
     """The union-find data structure.
 
     Maintains a collection of connected components as an implicit set of trees.
     Allows finding a representative (root) of a component and merging two components.
     """
     def __init__(self, components):
-        self.node_to_parent = {c: c for c in components}
+        super(ComponentCollectionRankBased, self).__init__(components)
         self.node_to_rank = {c: 0 for c in components}  # max depth to a leaf from c
 
     def find_root(self, c):
@@ -171,21 +268,15 @@ class ComponentCollection:
             if rank1 == rank2:
                 self.node_to_rank[root2] = rank2+1
 
-    def component_list(self):
-        components = defaultdict(list)
-        for node in self.node_to_parent:
-            components[self.find_root(node)].append(node)
-        return components.values()
 
-
-class ComponentCollectionSizeBased:
+class ComponentCollectionSizeBased(ComponentCollection):
     """The union-find data structure.
 
     Maintains a collection of connected components as an implicit set of trees.
     Allows finding a representative (root) of a component and merging two components.
     """
     def __init__(self, components):
-        self.node_to_parent = {c: c for c in components}
+        super(ComponentCollectionSizeBased, self).__init__(components)
         self.parent_to_nodes = {c: {c} for c in components}
 
     def find_root(self, c):
@@ -206,65 +297,3 @@ class ComponentCollectionSizeBased:
             # update children dict
             self.parent_to_nodes[root2].update(self.parent_to_nodes[root1])
             del self.parent_to_nodes[root1]
-
-    def component_list(self):
-        components = defaultdict(list)
-        for node in self.node_to_parent:
-            components[self.find_root(node)].append(node)
-        return components.values()
-
-
-class Ranker:
-    def __init__(self, matrix):
-        self.matrix = matrix
-        self.depth = len(self.matrix)
-        self.width = len(self.matrix[0])
-        self.solution_ranks = [[0 for _ in range(self.width)] for _ in range(self.depth)]
-        self.index_ranks = [0 for _ in range(self.depth+self.width)]
-        self.values = self.create_values()
-        self.edges = self.create_edges()
-
-    def components(self, val):
-        # return EdgesToComponentsUF(self.edges[val]).components()
-        return EdgesToComponentsBFS(self.edges[val]).components()
-
-    def create_values(self):
-        """Produce a sorted list of values that appear in the matrix."""
-        values = set()
-        for i in range(self.depth):
-            for j in range(self.width):
-                values.add(self.matrix[i][j])
-        return sorted(list(values))
-
-    def create_edges(self):
-        eds = defaultdict(list)
-        for i in range(self.depth):
-            for j in range(self.width):
-                val = self.matrix[i][j]
-                eds[val].append((i, j+self.depth))
-        return eds
-
-    def create_solution_ranks(self):
-        for val in self.values:
-            for component in self.components(val):
-                self.update_ranks(component)
-            self.assign_ranks(val)
-
-    def update_ranks(self, component):
-        # compute the rank
-        r = max(self.index_ranks[index] for index in component)+1
-        # update the rank
-        for index in component:
-            self.index_ranks[index] = r
-
-    def assign_ranks(self, val):
-        for i, j_shifted in self.edges[val]:
-            j = j_shifted-self.depth
-            self.solution_ranks[i][j] = self.index_ranks[i]
-
-
-class Solution:
-    def matrixRankTransform(self, matrix: List[List[int]]) -> List[List[int]]:
-        ranker = Ranker(matrix)
-        ranker.create_solution_ranks()
-        return ranker.solution_ranks
