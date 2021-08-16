@@ -219,6 +219,11 @@ class EdgesToComponentsUF(EdgesToComponentsBase):
 
 
 class ComponentCollection(ABC):
+    """The union-find data structure.
+
+    Maintains a collection of connected components as an implicit set of trees.
+    Allows finding a representative (root) of a component and merging two components.
+    """
     def __init__(self, components):
         self.node_to_parent = {c: c for c in components}
 
@@ -238,11 +243,6 @@ class ComponentCollection(ABC):
 
 
 class ComponentCollectionRankBased(ComponentCollection):
-    """The union-find data structure.
-
-    Maintains a collection of connected components as an implicit set of trees.
-    Allows finding a representative (root) of a component and merging two components.
-    """
     def __init__(self, components):
         super(ComponentCollectionRankBased, self).__init__(components)
         self.node_to_rank = {c: 0 for c in components}  # max depth to a leaf from c
@@ -271,11 +271,6 @@ class ComponentCollectionRankBased(ComponentCollection):
 
 
 class ComponentCollectionSizeBased(ComponentCollection):
-    """The union-find data structure.
-
-    Maintains a collection of connected components as an implicit set of trees.
-    Allows finding a representative (root) of a component and merging two components.
-    """
     def __init__(self, components):
         super(ComponentCollectionSizeBased, self).__init__(components)
         self.parent_to_nodes = {c: {c} for c in components}
