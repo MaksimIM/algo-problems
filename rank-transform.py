@@ -37,9 +37,9 @@ the inverse Ackermann function, which is at most 4 for all input sizes
 (an n for which alpha(n)>4 would require more bits to write down
 than there are atoms in the universe).
 
-We provide both implementations, via RankerBFS and RankerUF classes,
-which both inherit from abstract RankerBase and provide their own implementations
-of the generate_index_components method. Their time performance is not too different,
+We provide both implementations, via EdgesToComponentsBFS and EdgesToComponentsUF classes,
+which both inherit from abstract EdgesToComponentsBase and provide their own implementations
+of the generate_components method. Their time performance is not too different,
 (the BFS version is a bit faster, landing consistently in 99th percentile on leetcode),
 though the union-find version uses less memory
 (because it does not need to maintain neighbor-dictionary versions of the graphs).
@@ -69,7 +69,7 @@ implementation diverge more from the union-find one. So we stick to the
 from collections import deque
 from collections import defaultdict
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Iterable
 
 
 class EdgesToComponentsBase(ABC):
@@ -78,7 +78,7 @@ class EdgesToComponentsBase(ABC):
         self.vertices = self.get_vertices()
 
     @abstractmethod
-    def component_list(self):  # list or generator???
+    def components(self) -> Iterable:
         pass
 
     def get_vertices(self):
@@ -91,17 +91,12 @@ class EdgesToComponentsBase(ABC):
 
 class EdgesToComponentsBFS(EdgesToComponentsBase):
 
-    def component_list(self):  # currently generator
-        """Yield connected components of of indexes.
+    def components(self):
+        """Produces an iterable of connected components.
 
-        Find groups of indexes that are connected i.e.
-        whose cells with value val need to be assigned ranks simultaneously.
-        This is a vanilla bfs component finder, using
-        'indexes' for initializing the graph and
-        'neighbours' for finding vertex neighbours.
+        This is a vanilla bfs component finder.
         """
-        # bfs
-        # Pop directly or make a copy?
+        # Pop and use up or make a copy?
         v_to_nbrs = self.vertex_to_neighbours()
         while self.vertices:
             start = self.vertices.pop()
@@ -130,15 +125,14 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
 
 class EdgesToComponentsUF(EdgesToComponentsBase):
 
-    def component_list(self):
-        """Yield connected components of indexes.
+    def components(self):
+        """Produces an iterable of connected components.
 
-        Find groups of indexes that are connected i.e.
-        whose cells with value val need to be assigned ranks simultaneously.
-        The union-find implementation.
+        A union-find based implementation.
         """
+
         # create graph
-        graph = ComponentCollection(self.get_vertices())
+        graph = ComponentCollectionSizeBased(self.get_vertices())
         # add edges
         for i, j in self.edges:
             graph.union(i, j)
@@ -184,6 +178,42 @@ class ComponentCollection:
         return components.values()
 
 
+class ComponentCollectionSizeBased:
+    """The union-find data structure.
+
+    Maintains a collection of connected components as an implicit set of trees.
+    Allows finding a representative (root) of a component and merging two components.
+    """
+    def __init__(self, components):
+        self.node_to_parent = {c: c for c in components}
+        self.parent_to_nodes = {c: {c} for c in components}
+
+    def find_root(self, c):
+        return self.node_to_parent[c]
+
+    def union(self, c1, c2):
+        root1, root2 = self.find_root(c1), self.find_root(c2)
+        if root1 != root2:
+            size1, size2 = len(self.parent_to_nodes[root1]), len(self.parent_to_nodes[root2])
+            # make root1 smaller
+            if size1 > size2:
+                root1, root2 = root2, root1
+            # merge trees
+            self.node_to_parent[root1] = root2
+            # repoint all children of root1
+            for child in self.parent_to_nodes[root1]:
+                self.node_to_parent[child] = root2
+            # update children dict
+            self.parent_to_nodes[root2].update(self.parent_to_nodes[root1])
+            del self.parent_to_nodes[root1]
+
+    def component_list(self):
+        components = defaultdict(list)
+        for node in self.node_to_parent:
+            components[self.find_root(node)].append(node)
+        return components.values()
+
+
 class Ranker:
     def __init__(self, matrix):
         self.matrix = matrix
@@ -194,9 +224,9 @@ class Ranker:
         self.values = self.create_values()
         self.edges = self.create_edges()
 
-    def component_list(self, val):  # currenly list
-        return EdgesToComponentsUF(self.edges[val]).component_list
-        # return EdgesToComponentsBFS(self.edges[val])
+    def components(self, val):
+        # return EdgesToComponentsUF(self.edges[val]).components()
+        return EdgesToComponentsBFS(self.edges[val]).components()
 
     def create_values(self):
         """Produce a sorted list of values that appear in the matrix."""
@@ -216,8 +246,7 @@ class Ranker:
 
     def create_solution_ranks(self):
         for val in self.values:
-            for component in self.component_list(val):
-            # ValuesView inherits from Iterable as of python 3.7.2.
+            for component in self.components(val):
                 self.update_ranks(component)
             self.assign_ranks(val)
 
@@ -229,7 +258,8 @@ class Ranker:
             self.index_ranks[index] = r
 
     def assign_ranks(self, val):
-        for i, j in self.edges[val]:
+        for i, j_shifted in self.edges[val]:
+            j = j_shifted-self.depth
             self.solution_ranks[i][j] = self.index_ranks[i]
 
 
