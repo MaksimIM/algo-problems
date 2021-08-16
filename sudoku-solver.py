@@ -51,8 +51,8 @@ N = 3
 
 class Cell:
     def __init__(self, i, j, possible_values=None, neighbours=None):
-        self.i = i
-        self.j = j
+        self._i = i
+        self._j = j
 
         if possible_values is None:
             self.possible_values = set(ALPHABET)
@@ -63,12 +63,20 @@ class Cell:
         else:
             self.neighbours = neighbours
 
+    @property
+    def i(self):
+        return self._i
+
+    @property
+    def j(self):
+        return self._j
+
     def ordered_possible_values(self):
         if len(self.possible_values) < 2:
             return self.possible_values
-        return sorted(self.possible_values, key=self.how_constraining)
+        return sorted(self.possible_values, key=self._how_constraining)
 
-    def how_constraining(self, value):
+    def _how_constraining(self, value):
         return [(value in nbr.possible_values) for nbr in self.neighbours].count(True)
 
 
@@ -92,14 +100,14 @@ def allowed_values(i, j, board_list):
 class Sudoku:
     def __init__(self, board_list):
         self._board = board_list
-        self._unfilled = self.build_que()
+        self._unfilled = self._build_que()
 
     @property
     def board(self):
         return self._board
 
-    def build_que(self):
-        table = self.table_of_cells()
+    def _build_que(self):
+        table = self._table_of_cells()
         # Processes the table of cells into a queue of cells.
         board_que = [set() for _ in range(N * N + 1)]
         for i in range(N * N):
@@ -109,13 +117,13 @@ class Sudoku:
                     board_que[len(cell.possible_values)].add(cell)
         return board_que
 
-    def table_of_cells(self):
+    def _table_of_cells(self):
         """Make a table of cell objects from the board"""
         table = [[None for _ in range(N * N)] for _ in range(N * N)]
         for i in range(N * N):
             for j in range(N * N):
-                if self.board[i][j] == '.':
-                    table[i][j] = Cell(i, j, allowed_values(i, j, self.board))
+                if self._board[i][j] == '.':
+                    table[i][j] = Cell(i, j, allowed_values(i, j, self._board))
         # Set the neighbors of the cell objects.
         for i in range(N * N):
             for j in range(N * N):
@@ -124,7 +132,7 @@ class Sudoku:
                                               ((k, l) != (i, j) and table[k][l])}
         return table
 
-    def fill_cell_neighbours(self, current_cell, tentative_value):
+    def _fill_cell_neighbours(self, current_cell, tentative_value):
         """Restrict possible values of neighbors.
         Record which neighbors are affected for backtracking.
         Return the set of affected neighbours."""
@@ -137,7 +145,7 @@ class Sudoku:
                 self._unfilled[len(nbr.possible_values)].add(nbr)
         return modified_neighbours
 
-    def unfill_cell_neighbours(self, tentative_value, modified_neighbours):
+    def _unfill_cell_neighbours(self, tentative_value, modified_neighbours):
         for neighbour in modified_neighbours:
             self._unfilled[len(neighbour.possible_values)].remove(neighbour)
             neighbour.possible_values.add(tentative_value)
@@ -162,14 +170,14 @@ class Sudoku:
         for tentative_value in current_cell.possible_values:
             # Alternatively, iterate over current_cell.ordered_possible_values()
             # to use the "least constraining" heuristic.
-            modified_neighbours = self.fill_cell_neighbours(current_cell, tentative_value)
+            modified_neighbours = self._fill_cell_neighbours(current_cell, tentative_value)
 
             # See if smaller sudoku is solved. If not, undo the changes.
             if self.solve():
                 self.board[current_cell.i][current_cell.j] = tentative_value
                 return True
             else:
-                self.unfill_cell_neighbours(tentative_value, modified_neighbours)
+                self._unfill_cell_neighbours(tentative_value, modified_neighbours)
 
         # All the values failed. This means we should've chosen a different value
         # for one of the previous cells. We now undo the changes to the priority queue,
