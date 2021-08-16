@@ -204,7 +204,7 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
 
 class EdgesToComponentsUF(EdgesToComponentsBase):
     def __init__(self, edges, strategy_class):
-        super(EdgesToComponentsUF, self).__init__(edges)
+        super().__init__(edges)
         self.strategy_class = strategy_class
 
     def components(self) -> Iterable:
@@ -244,7 +244,7 @@ class ComponentCollection(ABC):
 
 class ComponentCollectionRankBased(ComponentCollection):
     def __init__(self, components):
-        super(ComponentCollectionRankBased, self).__init__(components)
+        super().__init__(components)
         self.node_to_rank = {c: 0 for c in components}  # max depth to a leaf from c
 
     def find_root(self, c):
