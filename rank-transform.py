@@ -179,7 +179,6 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
         # BFS
         # Copy the vertices or use them up? We copy, even if using up is a bit faster.
         remaining_vertices = copy.copy(self.vertices)
-
         while remaining_vertices:
             start = remaining_vertices.pop()
             q = deque([start])
