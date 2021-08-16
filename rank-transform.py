@@ -133,12 +133,12 @@ class Ranker:
         if not self._solution:
             self._solution = [[0 for _ in range(self._width)] for _ in range(self._depth)]
             for val in self._values:
-                for component in self.components(val):
+                for component in self._components(val):
                     self._update_ranks(component)
                 self._assign_ranks(val)
         return self._solution
 
-    def components(self, val):
+    def _components(self, val):
         return self._components_maker_class(self._edges[val],
                                             **self._component_maker_kwargs).components()
 
@@ -178,7 +178,7 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
         """A vanilla bfs component finder method."""
 
         # Construct the dictionary of neighbours.
-        v_to_nbrs = self.vertex_to_neighbours()
+        v_to_nbrs = self._vertex_to_neighbours()
         # BFS
         # Copy the vertices or use them up? We copy, even if using up is a bit faster.
         remaining_vertices = copy.copy(self._vertices)
@@ -197,7 +197,7 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
                         remaining_vertices.remove(w)
             yield visited
 
-    def vertex_to_neighbours(self) -> DefaultDict[Hashable, Set]:
+    def _vertex_to_neighbours(self) -> DefaultDict[Hashable, Set]:
         v_to_nbrs = defaultdict(set)
         for i, j in self._edges:
             v_to_nbrs[i].add(j)
