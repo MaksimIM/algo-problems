@@ -73,10 +73,11 @@ to all its neighbors. This has similar performance but would make the BFS/DFS
 implementation diverge more from the union-find one. So we stick to the
 "dictionary of edges" version (and generate neighbours when needed).
 """
+import copy
 from collections import deque
 from collections import defaultdict
 from abc import ABC, abstractmethod
-from typing import List, Iterable
+from typing import List, Iterable, DefaultDict, Hashable, Set
 
 # Choose 'BFS', 'UF_SIZE', 'UF_RANK'
 version = 'BFS'
@@ -112,10 +113,6 @@ class Ranker:
         else:
             self.component_maker_kwargs = component_maker_kwargs
 
-    def components(self, val):
-        return self.components_maker_class(self.edges[val],
-                                           **self.component_maker_kwargs).components()
-
     def create_values(self):
         """Produce a sorted list of values that appear in the matrix."""
         values = set()
@@ -137,6 +134,10 @@ class Ranker:
             for component in self.components(val):
                 self.update_ranks(component)
             self.assign_ranks(val)
+
+    def components(self, val):
+        return self.components_maker_class(self.edges[val],
+                                           **self.component_maker_kwargs).components()
 
     def update_ranks(self, component):
         # compute the rank
@@ -171,15 +172,15 @@ class EdgesToComponentsBase(ABC):
 class EdgesToComponentsBFS(EdgesToComponentsBase):
 
     def components(self) -> Iterable:
-        """A vanilla bfs component finder method.
+        """A vanilla bfs component finder method."""
 
-        Uses up self.vertices when called."""
-
+        # Construct the dictionary of neighbours.
         v_to_nbrs = self.vertex_to_neighbours()
+        # BFS
+        remaining_vertices = copy.copy(self.vertices) # Copy or use up. We copy.
         while self.vertices:
-            start = self.vertices.pop()
-            q = deque()
-            q.append(start)
+            start = remaining_vertices.pop()
+            q = deque([start])
             visited = {start}
 
             while q:
@@ -189,11 +190,10 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
                     if w not in visited:
                         q.append(w)
                         visited.add(w)
-                        self.vertices.remove(w)
+                        remaining_vertices.remove(w)
             yield visited
 
-    def vertex_to_neighbours(self):
-        """For a given value, construct the dictionary of index-neighbours"""
+    def vertex_to_neighbours(self) -> DefaultDict[Hashable, Set]:
         v_to_nbrs = defaultdict(set)
         for i, j in self.edges:
             v_to_nbrs[i].add(j)
