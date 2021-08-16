@@ -24,16 +24,16 @@ of our graph need to be assigned their rank simultaneously.
 
 It is important that for each v we initialize the graph
 to have only the vertices (indexes) that actually contain cells
-with value v, and to have an efficient way of finding neighbours of such an index.
-Then the number of vertices will be at most twice the number of edges,
+with value v. Then the number of vertices will be at most twice the number of edges,
 and the component search will take O(V+E)=O(E) for each value, if done via
 a BFS or a DFS graph exploration algorithm.
 Summing over all values, we see that finding components
 is will take time linear in the number of cells involved, C.
 
-An alternative implementation that uses a union-find sata structure instead,
-will run in O(C alpha(C)) time. Here alpha is
-the inverse Ackermann function, which is at most 4 for all input sizes
+An alternative implementation that uses a union-find sata structure instead.
+When fully optimized, it performs component-finding in O(C alpha(C)) time.
+Here alpha is the inverse Ackermann function,
+which is at most 4 for all practical input sizes
 (an n for which alpha(n)>4 would require more bits to write down
 than there are atoms in the universe).
 
@@ -43,13 +43,13 @@ of the generate_components method. Furthermore, we implement both size-based and
 union strategies for the union-find version.
 
 Their time performance of all three versions are not too different,
-(the BFS version is a bit faster, landing consistently in 99th percentile on leetcode),
+(the BFS version is a bit faster, landing consistently in 99th percentile on LeetCode),
 though the union-find version uses less memory
 (because it does not need to maintain neighbor-dictionary versions of the graphs),
-and for the size-based union strategy the time is quite close to that of the BFS version.
+For the size-based union strategy the time is quite close to that of the BFS version.
 
 Overall, the worst-case complexity of each implementation is O(C ln C),
-due to the sorting of the values.
+due to the sorting of the matrix values.
 After that step the rest runs in
 O(C) (BFS)/O(C alpha(C)) (rank-based UF)/O(C ln(C)) (size-based UF)
 time.
@@ -62,8 +62,8 @@ one more than the maximal rank already present.
 1) In the union-find version, to maintain sub-cubic (in N) complexity
 one needs at least one optimization in component finding,
 either merge-by-size or merge by rank, to ensure logarithmic time
-for find and union operations. To obtain the O(C alpha(C)) complexity
-union by rank and path compression are required. In practice,
+for find and union operations. To obtain the O(C alpha(C)) complexity,
+union by rank with path compression is needed. In practice,
 path compression makes little difference on the LeetCode examples.
 2) There are some alternative approaches to implementing the BFS version.
 For example, instead of the sets of edges, one could directly build two dictionaries,
