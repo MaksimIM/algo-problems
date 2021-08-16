@@ -178,7 +178,7 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
         v_to_nbrs = self.vertex_to_neighbours()
         # BFS
         remaining_vertices = copy.copy(self.vertices) # Copy or use up. We copy.
-        while self.vertices:
+        while remaining_vertices:
             start = remaining_vertices.pop()
             q = deque([start])
             visited = {start}
