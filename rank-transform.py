@@ -23,8 +23,8 @@ All such cells that are edges in a connected component
 of our graph need to be assigned their rank simultaneously.
 
 It is important that for each v we initialize the graph
-to have only the vertices (indexes) that actually contain cells
-with value v. Then the number of vertices will be at most twice the number of edges,
+to have only the vertices (indexes) that actually contain cells with value v.
+Then the number of vertices will be at most twice the number of edges,
 and the component search will take O(V+E)=O(E) for each value, if done via
 a BFS or a DFS graph exploration algorithm.
 Summing over all values, we see that finding components
@@ -37,16 +37,16 @@ which is at most 4 for all practical input sizes
 (an n for which alpha(n)>4 would require more bits to write down
 than there are atoms in the universe).
 
-We provide both implementations, via EdgesToComponentsBFS and EdgesToComponentsUF classes,
-which both inherit from abstract EdgesToComponentsBase and provide their own implementations
-of the generate_components method. Furthermore, we implement both size-based and rank-based
-union strategies for the union-find version.
+We provide both implementations via EdgesToComponentsBFS and EdgesToComponentsUF
+classes, which inherit from abstract EdgesToComponentsBase and provide their own
+implementations of the generate_components method. Furthermore, we implement
+both size-based and rank-based union strategies for the union-find version.
 
 Their time performance of all three versions are not too different,
-(the BFS version is a bit faster, landing consistently in 99th percentile on LeetCode),
-though the union-find version uses less memory
-(because it does not need to maintain neighbor-dictionary versions of the graphs),
-For the size-based union strategy the time is quite close to that of the BFS version.
+(the BFS version is a bit faster, landing in 99th percentile on LeetCode),
+though the union-find version uses less memory,
+because it does not need to maintain neighbor-dictionary versions of the graphs,
+For the size-based union strategy the time is close to that of the BFS version.
 
 Overall, the worst-case complexity of each implementation is O(C ln C),
 due to the sorting of the matrix values.
@@ -66,12 +66,12 @@ for find and union operations. To obtain the O(C alpha(C)) complexity,
 union by rank with path compression is needed. In practice,
 path compression makes little difference on the LeetCode examples.
 2) There are some alternative approaches to implementing the BFS version.
-For example, instead of the sets of edges, one could directly build two dictionaries,
-one mapping a value to all the indexes relevant to that value (aka the vertices
-of the corresponding graph) and one mapping and index-vertex (and a value)
-to all its neighbors. This has similar performance but would make the BFS/DFS
-implementation diverge more from the union-find one. So we stick to the
-"dictionary of edges" version (and generate neighbours when needed).
+For example, instead of the sets of edges, one could directly build
+two dictionaries, one mapping a value to all the indexes relevant to that value
+(aka the vertices of the corresponding graph) and one mapping and index-vertex
+(and a value) to all its neighbors. This has similar performance but would make
+the BFS/DFS implementation diverge more from the union-find one. So we stick to
+the "dictionary of edges" version (and generate neighbours when needed).
 """
 import copy
 from collections import deque
@@ -98,7 +98,8 @@ class Solution:
 
 
 class Ranker:
-    def __init__(self, matrix, component_maker_class, component_maker_kwargs=None):
+    def __init__(self, matrix,
+                 component_maker_class, component_maker_kwargs=None):
         self._matrix = matrix
         self._depth = len(self._matrix)
         self._width = len(self._matrix[0])
@@ -131,7 +132,8 @@ class Ranker:
     @property
     def solution(self):
         if not self._solution:
-            self._solution = [[0 for _ in range(self._width)] for _ in range(self._depth)]
+            self._solution = [[0 for _ in range(self._width)]
+                              for _ in range(self._depth)]
             for val in self._values:
                 for component in self._components(val):
                     self._update_ranks(component)
@@ -139,8 +141,8 @@ class Ranker:
         return self._solution
 
     def _components(self, val):
-        return self._components_maker_class(self._edges[val],
-                                            **self._component_maker_kwargs).components()
+        return self._components_maker_class(
+            self._edges[val], **self._component_maker_kwargs).components()
 
     def _update_ranks(self, component):
         # compute the rank
@@ -180,7 +182,8 @@ class EdgesToComponentsBFS(EdgesToComponentsBase):
         # Construct the dictionary of neighbours.
         v_to_nbrs = self._vertex_to_neighbours()
         # BFS
-        # Copy the vertices or use them up? We copy, even if using up is a bit faster.
+        # Copy the vertices or use them up?
+        # We copy, even if using up is a bit faster.
         remaining_vertices = copy.copy(self._vertices)
         while remaining_vertices:
             start = remaining_vertices.pop()
@@ -225,7 +228,8 @@ class ComponentCollection(ABC):
     """The union-find data structure.
 
     Maintains a collection of connected components as an implicit set of trees.
-    Allows finding a representative (root) of a component and merging two components.
+    Allows finding a representative (root) of a component
+    and merging two components.
     """
     def __init__(self, components):
         self._node_to_parent = {c: c for c in components}
@@ -248,7 +252,7 @@ class ComponentCollection(ABC):
 class ComponentCollectionRankBased(ComponentCollection):
     def __init__(self, components):
         super().__init__(components)
-        self._node_to_rank = {c: 0 for c in components}  # max depth to a leaf from c
+        self._node_to_rank = {c: 0 for c in components}  # max depth to a leaf
 
     def find_root(self, c):
         # with path compression, that is
@@ -284,7 +288,8 @@ class ComponentCollectionSizeBased(ComponentCollection):
     def union(self, c1, c2):
         root1, root2 = self.find_root(c1), self.find_root(c2)
         if root1 != root2:
-            size1, size2 = len(self._parent_to_nodes[root1]), len(self._parent_to_nodes[root2])
+            size1, size2 = len(self._parent_to_nodes[root1]),\
+                           len(self._parent_to_nodes[root2])
             # make root1 smaller
             if size1 > size2:
                 root1, root2 = root2, root1

@@ -3,8 +3,8 @@
 Solving Sudoku is problem 1632 on LeetCode
 https://leetcode.com/problems/sudoku-solver/
 
-The code below implements a backtracking algorithm with the "most constrained first"
-heuristic for choosing which cell to fill.
+The code below implements a backtracking algorithm with the
+"most constrained first" heuristic for choosing which cell to fill.
 
 Namely, we maintain the board as a priority queue of cells,
 ordered by number of possible values that can be put into that cell
@@ -77,7 +77,8 @@ class Cell:
         return sorted(self.possible_values, key=self._how_constraining)
 
     def _how_constraining(self, value):
-        return [(value in nbr.possible_values) for nbr in self.neighbours].count(True)
+        return [(value in nbr.possible_values)
+                for nbr in self.neighbours].count(True)
 
 
 def all_neighbors(i, j):
@@ -128,8 +129,10 @@ class Sudoku:
         for i in range(N * N):
             for j in range(N * N):
                 if table[i][j]:
-                    table[i][j].neighbours = {table[k][l] for (k, l) in all_neighbors(i, j) if
-                                              ((k, l) != (i, j) and table[k][l])}
+                    table[i][j].neighbours = {table[k][l]
+                                              for (k, l) in all_neighbors(i, j)
+                                              if ((k, l) != (i, j)
+                                              and table[k][l])}
         return table
 
     def _fill_cell_neighbours(self, current_cell, tentative_value):
@@ -170,18 +173,20 @@ class Sudoku:
         for tentative_value in current_cell.possible_values:
             # Alternatively, iterate over current_cell.ordered_possible_values()
             # to use the "least constraining" heuristic.
-            modified_neighbours = self._fill_cell_neighbours(current_cell, tentative_value)
+            modified_neighbours = self._fill_cell_neighbours(current_cell,
+                                                             tentative_value)
 
             # See if smaller sudoku is solved. If not, undo the changes.
             if self.solve():
                 self.board[current_cell.i][current_cell.j] = tentative_value
                 return True
             else:
-                self._unfill_cell_neighbours(tentative_value, modified_neighbours)
+                self._unfill_cell_neighbours(tentative_value,
+                                             modified_neighbours)
 
-        # All the values failed. This means we should've chosen a different value
-        # for one of the previous cells. We now undo the changes to the priority queue,
-        # to restore state for backtracking.
+        # All values failed. This means we should've chosen a different value
+        # for one of the previous cells. We now undo the changes to the
+        # priority queue, to restore state for backtracking.
         self._unfilled[d].add(current_cell)
         for neighbour in current_cell.neighbours:
             neighbour.neighbours.add(current_cell)
@@ -192,5 +197,6 @@ class Solution:
         """The main solving method."""
         the_sudoku = Sudoku(board)
         the_sudoku.solve()
-        # Problem specification expects variable 'board' to contain the solved sudoku.
+        # Problem specification expects variable 'board'
+        # to contain the solved sudoku.
         board = the_sudoku.board
