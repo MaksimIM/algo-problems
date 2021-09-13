@@ -6,47 +6,20 @@ https://leetcode.com/problems/sudoku-solver/
 The code below implements a backtracking algorithm with the
 "most constrained first" heuristic for choosing which cell to fill.
 
-Namely, we maintain the board as a priority queue of cells,
+It  maintains the board as a priority queue of cells,
 ordered by number of possible values that can be put into that cell
 without violating the sudoku constraints.
-(The abstract data type of queue is implemented as an array of sets of cells,
-with index being the number of possible values.
-This is an efficient implementation for our use case,
-since our priorities only take values between 0 and 10.)
-We then try to fill in one of the most constrained cells,
+We  try to fill in one of the most constrained cells,
 update the priority queue, and recurse.
 
-The number of operations required to fill a cell
-depends on the number of its unfilled neighbours.
-In the worst cases, this is O(N^2) (where N=3 for usual Sudoku).
-Hence the overall running time is O(N^2 x number of cell-fillings).
-(This is in contrast to O(N^3 x number of cell-fillings) for the queue-less
-version that computes a least-constrained cell "on the fly", or
-O(N^2 log N x number of cell-fillings) for a heap-based queue version).
-In practice the code runs fairly quickly
-(36 to 51 ms on LeetCode, 99th to 95th percentile
-and under 2 seconds on the following challenging test case:
-[
-[".",".",".",".",".",".",".","1","."],
-[".",".",".",".",".","2",".",".","3"],
-[".",".",".","4",".",".",".",".","."],
-[".",".",".",".",".",".","5",".","."],
-["4",".","1","6",".",".",".",".","."],
-[".",".","7","1",".",".",".",".","."],
-[".","5",".",".",".",".","2",".","."],
-[".",".",".",".","8",".",".","4","."],
-[".","3",".","9","1",".",".",".","."]
-]
-).
-
-I have also implemented the "least constraining value first"
-for choosing which values to try.
-However, it did not improve performance, an so is disabled in the code below.
+For more details, see the README in the file's github folder.
 """
 from typing import List
 
-ALPHABET = ('1', '2', '3', '4', '5', '6', '7', '8', '9')
-N = 3
+N_h = 3
+N_v = 3
+N = N_h * N_v
+ALPHABET = [str(n) for n in range(1, N+1)]
 
 
 class Cell:
@@ -83,10 +56,10 @@ class Cell:
 
 def _all_neighbors(i, j):
     """Returns indexes of all entries neighboring (i,j) in the sudoku board"""
-    neighbours = [(i, c) for c in range(N * N)] + [(r, j) for r in range(N * N)]
-    k_0, l_0 = N * (i // N), N * (j // N)
-    for dk in range(N):
-        for dl in range(N):
+    neighbours = [(i, c) for c in range(N)] + [(r, j) for r in range(N)]
+    k_0, l_0 = N_h * (i // N_h), N_v * (j // N_v)
+    for dk in range(N_h):
+        for dl in range(N_v):
             neighbours += [(k_0 + dk, l_0 + dl)]
     return neighbours
 
@@ -110,9 +83,9 @@ class Sudoku:
     def _build_que(self):
         table = self._table_of_cells()
         # Processes the table of cells into a queue of cells.
-        board_que = [set() for _ in range(N * N + 1)]
-        for i in range(N * N):
-            for j in range(N * N):
+        board_que = [set() for _ in range(N + 1)]
+        for i in range(N):
+            for j in range(N):
                 cell = table[i][j]
                 if cell:
                     board_que[len(cell.possible_values)].add(cell)
@@ -120,14 +93,14 @@ class Sudoku:
 
     def _table_of_cells(self):
         """Make a table of cell objects from the board"""
-        table = [[None for _ in range(N * N)] for _ in range(N * N)]
-        for i in range(N * N):
-            for j in range(N * N):
+        table = [[None for _ in range(N)] for _ in range(N)]
+        for i in range(N):
+            for j in range(N):
                 if self._board[i][j] == '.':
                     table[i][j] = Cell(i, j, _allowed_values(i, j, self._board))
         # Set the neighbors of the cell objects.
-        for i in range(N * N):
-            for j in range(N * N):
+        for i in range(N):
+            for j in range(N):
                 if table[i][j]:
                     table[i][j].neighbours = {table[k][l]
                                               for (k, l) in _all_neighbors(i, j)
@@ -161,7 +134,7 @@ class Sudoku:
         d = 1
         while not self._unfilled[d]:
             d += 1
-            if d == N * N + 1:
+            if d == N + 1:
                 return True
         current_cell = self._unfilled[d].pop()
 
@@ -200,3 +173,36 @@ class Solution:
         # Problem specification expects variable 'board'
         # to contain the solved sudoku.
         board = the_sudoku.board
+
+
+def main():
+    board_1 = [
+            [".",".",".",".",".",".",".","1","."],
+            [".",".",".",".",".","2",".",".","3"],
+            [".",".",".","4",".",".",".",".","."],
+            [".",".",".",".",".",".","5",".","."],
+            ["4",".","1","6",".",".",".",".","."],
+            [".",".","7","1",".",".",".",".","."],
+            [".","5",".",".",".",".","2",".","."],
+            [".",".",".",".","8",".",".","4","."],
+            [".","3",".","9","1",".",".",".","."]
+            ]
+    board_2 = [
+        [".",".",".",".","5","."],
+        [".","2",".","4",".","6"],
+        [".",".","6",".",".","4"],
+        [".",".",".",".",".","."],
+        ["6",".",".","1",".","."],
+        [".","4","3",".",".","."]
+        ]
+
+    board = board_1
+
+    sol = Solution
+    sol.solveSudoku(sol, board)
+    for row in board:
+        print(row)
+
+
+if __name__ == '__main__':
+    main()

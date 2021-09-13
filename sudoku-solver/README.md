@@ -17,7 +17,8 @@ The `'.'` character indicates empty cells.
 
 ### A solution
 
-The code is suitable for solving `N x N` case with arbitrary alphabet of symbols of length `N^2`, the usual case corresponding to `N=3` and the alphabet `('1', '2', '3', '4', '5', '6', '7', '8', '9')`. It is easy to adapt to the general `M x N` case as well.
+The code is suitable for solving any `N x N` sudoku with with `N` boxes of size 
+ `N = N_h x N_v` with arbitrary alphabet of symbols of length `N`, the usual case corresponding to `N_h=N_v=3` and the alphabet `('1', '2', '3', '4', '5', '6', '7', '8', '9')`. 
 
 This problem is an instance of **constraint satsfaction problem**. The code implements a backtracking algorithm with the
 "most constrained first" also known as **minimal remaing values** heuristic for choosing which cell to fill. For a discussion of all this and more see  Chapter 6 of Russel and Norvig's [Artificial Intelligence: A Modern Approach](http://aima.cs.berkeley.edu/contents.html).

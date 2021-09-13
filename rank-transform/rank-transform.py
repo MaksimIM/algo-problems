@@ -44,8 +44,7 @@ class Solution:
                         {'strategy_class': ComponentCollectionSizeBased}),
             'UF_RANK': (EdgesToComponentsUF,
                         {'strategy_class': ComponentCollectionRankBased}),
-        }
-
+            }
         ranker = Ranker(matrix, *version_parameters[_VERSION])
         return ranker.solution
 
@@ -254,3 +253,21 @@ class ComponentCollectionSizeBased(ComponentCollection):
             # update children dict
             self._parent_to_nodes[root2].update(self._parent_to_nodes[root1])
             del self._parent_to_nodes[root1]
+
+
+def main():
+    matrix = [
+            [20,-21,14],
+            [-19,4,19],
+            [22,-47,24],
+            [-19,4,19]
+            ]
+
+    sol = Solution
+    ranks=sol.matrixRankTransform(sol, matrix)
+    for row in ranks:
+        print(row)
+
+
+if __name__ == '__main__':
+    main()
