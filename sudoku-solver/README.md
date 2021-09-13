@@ -20,7 +20,7 @@ The `'.'` character indicates empty cells.
 The code is suitable for solving `N x N` case with arbitrary alphabet of symbols of length `N^2`, the usual case corresponding to `N=3` and the alphabet `('1', '2', '3', '4', '5', '6', '7', '8', '9')`. It is easy to adapt to the general `M x N` case as well.
 
 This problem is an instance of **constraint satsfaction problem**. The code implements a backtracking algorithm with the
-"most constrained first" also known as **minimal remaing values** heuristic for choosing which cell to fill. For a discussion of all this and more see  Chapter 6 of Russel and Norvig's [Artificial Intelligence: A Modern Approach] (http://aima.cs.berkeley.edu/contents.html).
+"most constrained first" also known as **minimal remaing values** heuristic for choosing which cell to fill. For a discussion of all this and more see  Chapter 6 of Russel and Norvig's [Artificial Intelligence: A Modern Approach](http://aima.cs.berkeley.edu/contents.html).
 
 Specifically, we maintain the board as **a priority queue of cells**,
 ordered by number of possible values that can be put into that cell
@@ -59,4 +59,4 @@ and under 2 seconds on the following challenging test case:
 
 I have also implemented the "least constraining value first"
 for choosing which values to try.
-However, it did not improve performance, and so is disabled in the code.
+However, it did not improve performance, and so is disabled in the code. An alternative approach via Local Search is not implemented here.
