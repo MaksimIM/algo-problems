@@ -20,7 +20,7 @@ where the rank of a cell in out matrix is an integer that represents how large a
 The last condition may seem ambiguous.  However, suppose we fix a given starting matrix.
 Then among all the functions `r` satisfying the first two conditions there exists one - which we will call `rank` - such that `rank(p) <= r(p)` for all other `r` and all `p`. This makes `rank` unambiguously 'as small as possible under these conditions', and this is the one that we should compute. In fact, existence of such 'minimal' `rank` function will follow from the solution.  
 
-### The solution
+### A solution
 
 The basic idea is simple:
 going from lowest values to highest,
