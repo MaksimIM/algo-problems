@@ -29,7 +29,7 @@ It covers the general ideas that are behind both of the algorithms presented her
 
 Both scripts can be run on LeetCode and locally. The local versions uses some of 
 the benchmark sudoku instances found on the [Sudoku research page](http://lipas.uwasa.fi/~timan/sudoku/)
-from University of Vaas.
+from University of Vaas. These can be found in the test-instances folder of this repo.
 
 
 #### The main approach
