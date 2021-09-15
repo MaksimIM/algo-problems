@@ -77,7 +77,7 @@ However, it did not improve performance, and so is disabled in the code.
 
 #### An alternative approach
 
-An alternative approach via **local search**. It operates by filling in each box
+An alternative approach is via **local search**. It operates by filling in each box
 using a random permutation of allowed values 
 (that is, we exclude the values of the pre-filled cells and permute the rest, 
 filling the whole box). This creates conflicts wherever the 
