@@ -96,5 +96,5 @@ ration of (number of steps so far) to (the number of steps from start till last 
 which triggers a restart).
 
 This method is not as efficient for most sudoku instances, 
-but it still passes the LeetCode tester most of the time.
+but it still passes the LeetCode tester once in a while (about 20% of time).
  
