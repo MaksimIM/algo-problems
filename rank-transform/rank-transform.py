@@ -263,8 +263,8 @@ def main():
             [-19,4,19]
             ]
 
-    sol = Solution
-    ranks=sol.matrixRankTransform(sol, matrix)
+    sol = Solution()
+    ranks=sol.matrixRankTransform(matrix)
     for row in ranks:
         print(row)
 

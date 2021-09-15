@@ -1,6 +1,6 @@
-## A Sudoku solver
+## Two Sudoku solvers
 
-This is a solution for the Solving Sudoku problem, problem 1632 on LeetCode
+This repo contains two solutions for the Solving Sudoku problem, problem 1632 on LeetCode
 
 https://leetcode.com/problems/sudoku-solver/
 
@@ -15,13 +15,26 @@ A sudoku solution must satisfy all of the following rules:
 * Each of the digits `1-9` must occur exactly once in each of the 9 3x3 sub-boxes of the grid.
 The `'.'` character indicates empty cells.
 
-### A solution
+### Discussion of solutions
 
-The code is suitable for solving any `N x N` sudoku with with `N` boxes of size 
- `N = N_h x N_v` with arbitrary alphabet of symbols of length `N`, the usual case corresponding to `N_h=N_v=3` and the alphabet `('1', '2', '3', '4', '5', '6', '7', '8', '9')`. 
+Both versions of the code are suitable for solving any `N x N` sudoku 
+with `N` boxes of size   `N = N_h x N_v` with arbitrary alphabet of symbols 
+of length `N`, the usual case corresponding to `N_h=N_v=3` and the alphabet
+`('1', '2', '3', '4', '5', '6', '7', '8', '9')`. 
 
-This problem is an instance of **constraint satsfaction problem**. The code implements a backtracking algorithm with the
-"most constrained first" also known as **minimal remaing values** heuristic for choosing which cell to fill. For a discussion of all this and more see  Chapter 6 of Russel and Norvig's [Artificial Intelligence: A Modern Approach](http://aima.cs.berkeley.edu/contents.html).
+This problem is an instance of **constraint satisfaction problem**. 
+For a discussion of such problems, see  Chapter 6 of Russel and Norvig's 
+[Artificial Intelligence: A Modern Approach](http://aima.cs.berkeley.edu/contents.html).
+It covers the general ideas that are behind both of the algorithms presented here.
+
+Both scripts can be run on LeetCode and locally. The local versions uses some of 
+the benchmark sudoku instances found on the [Sudoku research page](http://lipas.uwasa.fi/~timan/sudoku/)
+from University of Vaas.
+
+
+#### Main approach
+The main approach implements a backtracking algorithm with the
+"most constrained first" also known as **minimal remaining values** heuristic for choosing which cell to fill. 
 
 Specifically, we maintain the board as **a priority queue of cells**,
 ordered by number of possible values that can be put into that cell
@@ -60,4 +73,28 @@ and under 2 seconds on the following challenging test case:
 
 I have also implemented the "least constraining value first"
 for choosing which values to try.
-However, it did not improve performance, and so is disabled in the code. An alternative approach via Local Search is not implemented here.
+However, it did not improve performance, and so is disabled in the code.
+
+#### An alternative approach
+
+An alternative approach via **local search**. It operates by filling in each box
+using a random permutation of allowed values 
+(that is, we exclude the values of the pre-filled cells and permute the rest, 
+filling the whole box). This creates conflicts wherever the 
+same value appears several times in some row or column.
+We call the cells where such troublesome values are located 'conflicted'. 
+We then repeatedly swap a random conflicted cell with one of its box-mates, 
+attempting to reduce the amount of conflict. This is a "local" move, in the 
+sense of trying to improve the filling by small changes. Of course, such local 
+optimizers can get stuck in local minima.  There is a small amount of resistance,
+to this since once one of the conflicted cells is picked, we force a swap 
+even if it would increase the amount of conflict, thus allowing us to perturb
+away from a local minimum. However, this is sometimes insufficient. As a 
+fail-safe we simply restart after we fail to see an improvement for a while
+(how long we wait is controlled by the "restart ratio" parameter, which is minimal
+ration of (number of steps so far) to (the number of steps from start till last improvement)
+which triggers a restart).
+
+This method is not as efficient for most sudoku instances, 
+but it still passes the LeetCode tester most of the time.
+ 

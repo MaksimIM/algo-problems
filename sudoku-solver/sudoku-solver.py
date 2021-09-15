@@ -1,6 +1,7 @@
 """ This is a Sudoku solver.
 
 Solving Sudoku is problem 1632 on LeetCode
+
 https://leetcode.com/problems/sudoku-solver/
 
 The code below implements a backtracking algorithm with the
@@ -20,6 +21,7 @@ N_h = 3
 N_v = 3
 N = N_h * N_v
 ALPHABET = [str(n) for n in range(1, N+1)]
+BYE_SYMBOL = '.'
 
 
 class Cell:
@@ -96,7 +98,7 @@ class Sudoku:
         table = [[None for _ in range(N)] for _ in range(N)]
         for i in range(N):
             for j in range(N):
-                if self._board[i][j] == '.':
+                if self._board[i][j] == BYE_SYMBOL:
                     table[i][j] = Cell(i, j, _allowed_values(i, j, self._board))
         # Set the neighbors of the cell objects.
         for i in range(N):
@@ -196,10 +198,20 @@ def main():
         [".","4","3",".",".","."]
         ]
 
+
+    file_name='s09a.txt'
+    board_3 = []
+    with open(file_name) as f:
+        for line in f.read().splitlines():
+            if line:
+                raw_row=line.split(' ')[:-1]
+                row=[BYE_SYMBOL if x=='0' else x for x in raw_row]
+                board_3.append(row)
+
     board = board_1
 
-    sol = Solution
-    sol.solveSudoku(sol, board)
+    sol = Solution()
+    sol.solveSudoku(board)
     for row in board:
         print(row)
 
