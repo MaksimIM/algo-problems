@@ -86,15 +86,15 @@ We call the cells where such troublesome values are located 'conflicted'.
 We then repeatedly swap a random conflicted cell with one of its box-mates, 
 attempting to reduce the amount of conflict. This is a "local" move, in the 
 sense of trying to improve the filling by small changes. Of course, such local 
-optimizers can get stuck in local minima.  There is a small amount of resistance,
-to this since once one of the conflicted cells is picked, we force a swap 
-even if it would increase the amount of conflict, thus allowing us to perturb
+optimizers can get stuck in local minima.  There is a small amount of resistance
+to this, since, once one of the conflicted cells is picked, we force a swap 
+even if it would increase the amount of conflict. This allows us to perturb
 away from a local minimum. However, this is sometimes insufficient. As a 
-fail-safe we simply restart after we fail to see an improvement for a while
-(how long we wait is controlled by the "restart ratio" parameter, which is minimal
-ration of (number of steps so far) to (the number of steps from start till last improvement)
+fail-safe, we simply restart after we fail to see an improvement for a while
+(how long we wait is controlled by the "restart ratio" parameter, which is the minimal
+ratio (number of steps so far)/(the number of steps from start till last improvement)
 which triggers a restart).
 
-This method is not as efficient for most sudoku instances, 
+For most sudoku instances this method is not as efficient as our main approach,
 but it still passes the LeetCode tester once in a while (about 20% of time).
  
