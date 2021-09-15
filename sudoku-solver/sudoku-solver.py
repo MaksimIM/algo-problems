@@ -199,7 +199,7 @@ def main():
         ]
 
 
-    file_name='s09a.txt'
+    file_name='test-instances/s09a.txt'
     board_3 = []
     with open(file_name) as f:
         for line in f.read().splitlines():
@@ -208,7 +208,7 @@ def main():
                 row=[BYE_SYMBOL if x=='0' else x for x in raw_row]
                 board_3.append(row)
 
-    board = board_1
+    board = board_3
 
     sol = Solution()
     sol.solveSudoku(board)

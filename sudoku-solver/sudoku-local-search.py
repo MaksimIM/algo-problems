@@ -268,7 +268,7 @@ def main():
                ["5",".","3","7",".",".",".",".","8"],
                ["4","7",".",".",".","1",".",".","."]]
 
-    file_name = 's12a.txt'
+    file_name = 'test-instances/s08a.txt'
     board_4 = []
     with open(file_name) as f:
         for line in f.read().splitlines():
