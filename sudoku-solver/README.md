@@ -32,7 +32,7 @@ the benchmark sudoku instances found on the [Sudoku research page](http://lipas.
 from University of Vaas.
 
 
-#### Main approach
+#### The main approach
 The main approach implements a backtracking algorithm with the
 "most constrained first" also known as **minimal remaining values** heuristic for choosing which cell to fill. 
 
