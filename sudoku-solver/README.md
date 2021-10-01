@@ -27,8 +27,7 @@ For a discussion of such problems, see  Chapter 6 of Russel and Norvig's
 [Artificial Intelligence: A Modern Approach](http://aima.cs.berkeley.edu/contents.html).
 It covers the general ideas that are behind both of the algorithms presented here.
 
-Both scripts can be run on LeetCode and locally. The local versions uses some of 
-the benchmark sudoku instances found on the [Sudoku research page](http://lipas.uwasa.fi/~timan/sudoku/)
+Both scripts can be run on LeetCode and locally. The local versions uses some of the benchmark sudoku instances found on the [Sudoku research page](http://lipas.uwasa.fi/~timan/sudoku/)
 from University of Vaas. These can be found in the test-instances folder of this repo.
 
 
