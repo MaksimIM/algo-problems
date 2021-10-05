@@ -10,7 +10,7 @@ https://leetcode.com/problems/the-number-of-good-subsets/
 You are given an integer array `nums`. We call a subset of `nums` **good** if
 its product can be represented as a product of one or more distinct prime numbers
 (that is, this product is 
-[suaqre-free](https://en.wikipedia.org/wiki/Square-free_integer) 
+[square-free](https://en.wikipedia.org/wiki/Square-free_integer) 
 and is not equal to `1`).
 
 Return the **number of different good subsets** in `nums` modulo `10^9 + 7`.
@@ -25,7 +25,7 @@ Constraints:
 ##### Dynamic programming
 
 Observe that we can pick any number of ones to be or not be in out good subset.
-This means that if we coulnt the number of good subsets without any 1s, 
+This means that if we count the number of good subsets without any 1s, 
 the final answer will be just that count multiplied by `2^(count(1))`.  
 With this proviso, we ignore any `1`s in `nums` from now on.
 
@@ -33,7 +33,7 @@ Now, to select a good subset, each number we pick must be square-free, and we ca
 only pick one copy of each number.  Moreover, some numbers are incompatible with others.
 To keep track, instead of just counting the ways to make a square-free product, we 
 count the number of ways to make products **equal to each specific product of 
-primes we can concievably get**.
+primes we can conceivably get**.
 That is, for every subset `S` of primes below 30, we see how many ways we can
 pick a subset of `nums` that multiplies to `S`. We can think of the subset 
 of primes that appear in the product as a state, and when we decide to use a new 
@@ -49,7 +49,7 @@ for each subset of primes S containing S_n we have:
 Of course, for all other subsets (those not containing S_n) we can not use n.
 
 Using bitmasks to index subsets of primes, one gets from this a dynamic programming solution,
-implemented in **good-subsets-dp.py**. One has to not forget to subtractt 1 for 
+implemented in **good-subsets-dp.py**. One has to not forget to subtract 1 for 
 the empty set (which leads to the product of 1, which the problem excludes), and to multiply by `2^#1s`
 to account for all the `1`s that can be used as well.
 
@@ -72,18 +72,23 @@ Similarly, there is no way to use product of 3 numbers of the form `p_1p_2`. Thi
 
 Overall, we define
 
+<img src="https://latex.codecogs.com/gif.latex?r_{p_i&space;p_j}&space;:=\frac{&space;n(p_i&space;p_j)}{(1&plus;n(p_i))(1&plus;n(p_j))}" title="r_{p_i p_j} :=\frac{ n(p_i p_j)}{(1+n(p_i))(1+n(p_j))}" />
+
 ```math
 r_{p_i p_j} :=\frac{ n(p_i p_j)}{(1+n(p_i))(1+n(p_j))} 
 ```
+
+<img src="https://latex.codecogs.com/gif.latex?r_{30}&space;:=&space;\frac{n(30)}{(1&plus;n(2))(1&plus;n(3))(1&plus;n(5))}" title="r_{30} := \frac{n(30)}{(1+n(2))(1+n(3))(1+n(5))}" />
 
 ```math
 r_{30} := \frac{n(30)}{(1+n(2))(1+n(3))(1+n(5))}
 ```
 
 and get the answer
+<img src="https://latex.codecogs.com/gif.latex?2^{n(1)}\left[\prod_i&space;(1&plus;n(p_i))&space;\left(1&plus;\sum_{i>j}&space;r_{p_i&space;p_j}&space;&plus;&space;(r_{22}&plus;r_{26})(r_{15}&plus;r_{21})&plus;r_{15}r_{14}&plus;r_{21}r_{10}&space;&plus;r_{30}\right)&space;-1\right]" title="2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right) -1\right]" />
 
 ```math
-2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i  p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right)   -1\right] .  $$
+2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i  p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right)   -1\right].
 ```
 The result can be computed using exact arithmetic of rational fractions. This is implemented in **good-subsets-math.py**.
 
