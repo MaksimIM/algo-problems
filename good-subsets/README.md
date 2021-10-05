@@ -11,7 +11,7 @@ You are given an integer array `nums`. We call a subset of `nums` **good** if
 its product can be represented as a product of one or more distinct prime numbers
 (that is, this product is 
 [square-free](https://en.wikipedia.org/wiki/Square-free_integer) 
-and is not equal to `1`).
+and is not equal to `1`). 
 
 Return the **number of different good subsets** in `nums` modulo `10^9 + 7`.
 
@@ -85,6 +85,7 @@ r_{30} := \frac{n(30)}{(1+n(2))(1+n(3))(1+n(5))}
 ```
 
 and get the answer
+
 <img src="https://latex.codecogs.com/gif.latex?2^{n(1)}\left[\prod_i&space;(1&plus;n(p_i))&space;\left(1&plus;\sum_{i>j}&space;r_{p_i&space;p_j}&space;&plus;&space;(r_{22}&plus;r_{26})(r_{15}&plus;r_{21})&plus;r_{15}r_{14}&plus;r_{21}r_{10}&space;&plus;r_{30}\right)&space;-1\right]" title="2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right) -1\right]" />
 
 ```math
