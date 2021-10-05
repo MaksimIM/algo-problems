@@ -72,14 +72,19 @@ Similarly, there is no way to use product of 3 numbers of the form `p_1p_2`. Thi
 
 Overall, we define
 
-$$r_{p_i p_j} :=\frac{ n(p_i p_j)}{(1+n(p_i))(1+n(p_j))}$$
+```math
+r_{p_i p_j} :=\frac{ n(p_i p_j)}{(1+n(p_i))(1+n(p_j))} 
+```
 
-$$r_{30} := \frac{n(30)}{(1+n(2))(1+n(3))(1+n(5))}$$
+```math
+r_{30} := \frac{n(30)}{(1+n(2))(1+n(3))(1+n(5))}
+```
 
 and get the answer
 
-$$2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i  p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right)   -1\right] .  $$
-
+```math
+2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i  p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right)   -1\right] .  $$
+```
 The result can be computed using exact arithmetic of rational fractions. This is implemented in **good-subsets-math.py**.
 
 #### Remarks
