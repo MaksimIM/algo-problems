@@ -27,15 +27,11 @@ ALPHABET = tuple(map(str, range(1, SIZE+1)))
 EMPTY_SYMBOL = '.'
 
 
-def alphabet():
-    return set(ALPHABET)
-
-
 @dataclasses.dataclass(unsafe_hash=True)
 class Cell:
     x_pos: int
     y_pos: int
-    possible_values: set[str] = dataclasses.field(compare=False, repr=False)  # = dataclasses.field(default_factory=alphabet)
+    possible_values: set[str] = dataclasses.field(compare=False, repr=False)
     neighbours: set[Cell] = dataclasses.field(init=False, compare=False, repr=False)
 
     def ordered_possible_values(self):
@@ -70,11 +66,11 @@ def build_que(board):
     table = table_of_cells(board)
     # Processes the table of cells into a queue of cells.
     board_que = [set() for _ in range(SIZE + 1)]
-    for i in range(SIZE):
-        for j in range(SIZE):
-            cell = table[i][j]
-            if cell is not None:
-                board_que[len(cell.possible_values)].add(cell)
+    for x_pos, y_pos in product(range(SIZE), range(SIZE)):
+        cell = table[x_pos][y_pos]
+        if cell is None:
+            continue
+        board_que[len(cell.possible_values)].add(cell)
     return board_que
 
 
