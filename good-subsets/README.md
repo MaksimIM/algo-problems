@@ -82,6 +82,8 @@ r_{30} := \frac{n(30)}{(1+n(2))(1+n(3))(1+n(5))}
 
 and get the answer
 
+<img src="https://render.githubusercontent.com/render/math?math=2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i  p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right) ">
+
 ```math
 2^{n(1)}\left[\prod_i (1+n(p_i)) \left(1+\sum_{i>j} r_{p_i  p_j} + (r_{22}+r_{26})(r_{15}+r_{21})+r_{15}r_{14}+r_{21}r_{10} +r_{30}\right)   -1\right] .  $$
 ```
