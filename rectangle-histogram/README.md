@@ -19,7 +19,7 @@ Here "maximal" means not extendable right or left.
 but then we would need to exclude some maximal rectangles
 a priori, which seems challenging.) The question, then,
 is how to arrange for such an examination. One of our approaches (dp/bottlenecks)
-produces and algorithm whose **time complexity is non-trivial to analise**, 
+produces and algorithm whose **time complexity is non-trivial to analyze**, 
 which we do towards the end. 
 
 
